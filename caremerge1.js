@@ -2,9 +2,11 @@ var express = require('express');
 var http = require("http");
 
 var app = express();
+var counterForWritingEnd = 0;
 
 app.get("/I/want/title/", function (request,response) {
 
+	counterForWritingEnd = 0;
 	var requestUrl = request.url;
 	writeHeader(response);
 		
@@ -27,15 +29,20 @@ app.get("/I/want/title/", function (request,response) {
 				var requestForError = http.get(urlOpts, function (res) {
 					
 					res.on('end',function(){
-						writeTitleFooter(response);
-						writeFooter(response);
+						counterForWritingEnd++;
+					
+						if(counterForWritingEnd == queryStringCount)
+						{
+							writeTitleFooter(response);
+							writeFooter(response);
+						}
 					}),
 				    res.on('data', function (chunk) {
 
 				        var str=chunk.toString();
 				        var match = re.exec(str);
 				        if (match && match[2]) {
-							console.log(queryStringCount +"-----" + counter);
+							
 							writeTitle(response,match[2]);
 				        }
 			
