@@ -13,17 +13,17 @@ var getTitle = function(urlOpts)
 		var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
 
 		http.get(urlOpts, function (res) {
-	    res.on('data', function (chunk) {
+			res.on('data', function (chunk) {
 	    	//callback
-	        var str=chunk.toString();
-	        var match = re.exec(str);
-	        if (match && match[2]) {
+	    	var str=chunk.toString();
+	    	var match = re.exec(str);
+	    	if (match && match[2]) {
 	        	//get the title
 	        	resolve(match[2]);
 	        }
 	    });
 		}).on("error", function(e){
-		  	reject(e.message);
+			reject(e.message);
 		});
 	});
 
@@ -34,7 +34,7 @@ app.get("/I/want/title/", function (request,response) {
 
 	var requestUrl = request.url;
 	writeHeader(response);
-			
+
 	counterForWritingEnd = 0;
 	//For querystrings which contains '&'
 	if(requestUrl.indexOf('&') > -1)
@@ -43,8 +43,9 @@ app.get("/I/want/title/", function (request,response) {
 		
 		writeTitleHeader(response);
 
-	  	for(var counter = 0;counter < queryStringCount;counter++)
+		for(var counter = 0;counter < queryStringCount;counter++)
 		{
+			var urlToShow = request.query.address[counter]; 
 			var splitUrl = request.query.address[counter].split("/");
 			var validateQueryString = splitUrl[0].indexOf(".com") !== -1
 
@@ -52,19 +53,22 @@ app.get("/I/want/title/", function (request,response) {
 			{
 				var urlOpts = {host: splitUrl[0], path: splitUrl[1] == undefined ? "/": "/"+splitUrl[1] + "/", port: '80'};
 
-				getTitle(urlOpts).then(function(responseText){
-					//console.log(responseText + "----then");
-					writeTitle(response,responseText);
-					counterForWritingEnd++;
-					
-					if(counterForWritingEnd == queryStringCount)
-					{
-						writeTitleFooter(response);
-						writeFooter(response);
-					}
-				}).catch(function(error){
-					console.log(error);
+				callbackClosure(urlToShow,function(x2){
+					return getTitle(urlOpts).then(function(responseText){
+						//console.log(responseText + "----then");
+						writeTitle(response,responseText + "--" + x2);
+						counterForWritingEnd++;
+						
+						if(counterForWritingEnd == queryStringCount)
+						{
+							writeTitleFooter(response);
+							writeFooter(response);
+						}
+					}).catch(function(error){
+						console.log(error);
+					});	
 				});
+				
 			}
 		}
 
@@ -77,11 +81,11 @@ app.get("/I/want/title/", function (request,response) {
 		if(validateQueryString)
 		{
 			var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
-			
+
 			getTitle(urlOpts).then(function(responseText)
 			{
 				writeTitleHeader(response);
-				writeTitle(response,responseText);
+				writeTitle(response,responseText + "--" + queryStringUrl);
 				writeTitleFooter(response);
 				writeFooter(response);
 
@@ -98,14 +102,19 @@ app.get("*", function (request,response) {
 	response.status(404).send('Not found');
 });
 
+function callbackClosure(i, callback) 
+{
+	return callback(i);
+}
+
 app.listen(8080);
 
 function writeHeader(response)
 {
-	  response.write("<html>");
-	  response.write("<head><title>Caremerge");
-	  response.write("</title></head>");
-	  response.write("<body>");
+	response.write("<html>");
+	response.write("<head><title>Caremerge");
+	response.write("</title></head>");
+	response.write("<body>");
 }
 
 function writeFooter(response)
