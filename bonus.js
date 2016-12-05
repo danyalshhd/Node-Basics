@@ -6,36 +6,11 @@ var counterForWritingEnd = 0;
 
 var app = express();
 
-//return promise object
-var getTitle = function(urlOpts)
-{
-	var promise = new RSVP.Promise(function(resolve,reject)
-	{
-		var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
-
-		http.get(urlOpts, function (res) {
-	    res.on('data', function (chunk) {
-	    	//callback
-	        var str=chunk.toString();
-	        var match = re.exec(str);
-	        if (match && match[2]) {
-	        	//get the title
-	        	resolve(match[2]);
-	        }
-	    });
-		}).on("error", function(e){
-		  	reject(e.message);
-		});
-	});
-
-	return promise;
-}
-
 app.get("/I/want/title/", function (request,response) {
 
 	var requestUrl = request.url;
 	writeHeader(response);
-			
+
 	counterForWritingEnd = 0;
 	//For querystrings which contains '&'
 	if(requestUrl.indexOf('&') > -1)
@@ -44,8 +19,9 @@ app.get("/I/want/title/", function (request,response) {
 		
 		writeTitleHeader(response);
 
-	  	for(var counter = 0;counter < queryStringCount;counter++)
+		for(var counter = 0;counter < queryStringCount;counter++)
 		{
+			var urlToShow = request.query.address[counter];
 			var splitUrl = request.query.address[counter].split("/");
 			var validateQueryString = splitUrl[0].indexOf(".com") !== -1
 
@@ -53,13 +29,20 @@ app.get("/I/want/title/", function (request,response) {
 			{
 				var urlOpts = {host: splitUrl[0], path: splitUrl[1] == undefined ? "/": "/"+splitUrl[1] + "/", port: '80'};
 
-				var getTitlePromise = getTitle(urlOpts)
+				var getTitlePromise = callbackClosure(urlToShow,function(x2){
+					return getTitle(urlOpts,x2);
+				}); 
+
 				const source$ = Rx.Observable.fromPromise(getTitlePromise);
 				source$.subscribe(titleName=>{
 					// writeTitleHeader(response);
 					writeTitle(response,titleName);
-					// writeTitleFooter(response);
-					// writeFooter(response);
+					counterForWritingEnd++;
+					if(counterForWritingEnd == queryStringCount)
+					{
+						writeTitleFooter(response);
+						writeFooter(response);	
+					}
 				});		
 			}
 		}
@@ -74,7 +57,7 @@ app.get("/I/want/title/", function (request,response) {
 		{
 			var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
 			
-			var getTitlePromise = getTitle(urlOpts)
+			var getTitlePromise = getTitle(urlOpts,queryStringUrl)
 			const source$ = Rx.Observable.fromPromise(getTitlePromise);
 			source$.subscribe(titleName=>{
 				writeTitleHeader(response);
@@ -92,14 +75,44 @@ app.get("*", function (request,response) {
 	response.status(404).send('Not found');
 });
 
+function callbackClosure(i, callback) 
+{
+	return callback(i);
+}
+
 app.listen(8080);
+
+//return promise object
+var getTitle = function(urlOpts,urlToShow)
+{
+	var promise = new RSVP.Promise(function(resolve,reject)
+	{
+		var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
+
+		http.get(urlOpts, function (res) {
+			res.on('data', function (chunk) {
+	    	//callback
+	    	var str=chunk.toString();
+	    	var match = re.exec(str);
+	    	if (match && match[2]) {
+	        	//get the title
+	        	resolve(match[2] + "--" + urlToShow);
+	        }
+	    });
+		}).on("error", function(e){
+			reject(e.message);
+		});
+	});
+
+	return promise;
+}
 
 function writeHeader(response)
 {
-	  response.write("<html>");
-	  response.write("<head><title>Caremerge Bonus");
-	  response.write("</title></head>");
-	  response.write("<body>");
+	response.write("<html>");
+	response.write("<head><title>Caremerge Bonus");
+	response.write("</title></head>");
+	response.write("<body>");
 }
 
 function writeFooter(response)
