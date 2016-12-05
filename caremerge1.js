@@ -32,6 +32,8 @@ app.get("/I/want/title/", function (request,response) {
 
 			for(var counter = 0;counter < queryStringCount;counter++)
 			{
+				var urlToShow = request.query.address[counter];
+				console.log(urlToShow);
 				var splitUrl = request.query.address[counter].split("/");
 
 				var validateQueryString = splitUrl[0].indexOf(".com") !== -1
@@ -41,7 +43,9 @@ app.get("/I/want/title/", function (request,response) {
 					var urlOpts = {host: splitUrl[0], path: splitUrl[1] == undefined ? "/": "/"+splitUrl[1] + "/", port: '80'};
 					var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
 
-					var requestForError = http.get(urlOpts, function (res) {
+
+					callbackClosure(urlToShow, function (x2){
+						http.get(urlOpts, function (res) {
 
 						res.on('end',function(){
 							counterForWritingEnd++;
@@ -52,27 +56,15 @@ app.get("/I/want/title/", function (request,response) {
 								writeFooter(response);
 							}
 						}),
-						res.on('data', function (chunk) {
+						//async call
+						getTitleResponse(res,response,x2,false);
 
-							try
-							{
-								var str=chunk.toString();
-								var match = re.exec(str);
-								if (match && match[2]) {
-
-									writeTitle(response,match[2]);
-								}
-							}
-							catch(e)
-							{
-								console.log(e);
-							}
-
+						}).on('error',function(e){
+							console.log("Got error: " + e.message);
+							writeError(response);
 						});
-					}).on('error',function(e){
-						console.log("Got error: " + e.message);
-						writeError(response);
 					});
+					
 				}
 				else
 				{
@@ -91,11 +83,82 @@ app.get("/I/want/title/", function (request,response) {
 
 });
 
+function callbackClosure(i, callback) 
+{
+	return callback(i);
+}
+
 app.get("*", function (request,response) {
 	response.status(404).send('Not found');
 });
 
 app.listen(8080);
+
+
+function getQueryStringCount(url,queryStringCount)
+{
+	var splitUrl = url.split("&");
+
+	var lengthQueryString = 0;
+	if(splitUrl.length == 2 && queryStringCount > 5)
+	{
+		lengthQueryString = 1;
+	}
+	else
+	{
+		lengthQueryString = queryStringCount;
+	}
+
+	return lengthQueryString;
+}
+
+
+function getSingleWebsiteTitle(request,response)
+{
+	var queryStringUrl = request.query.address;
+	var validateQueryString = queryStringUrl.indexOf(".com") !== -1
+	if(validateQueryString)
+	{
+		var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
+		http.get(urlOpts, function (res) {
+
+			getTitleResponse(res,response,queryStringUrl,true);
+
+		}).on("error", function(e){
+			console.log("Got error: " + e.message);
+			writeError(response);
+		});
+
+	}
+	else
+	{
+		//Invalid URL
+		writeError(response);
+	}
+}
+
+function getTitleResponse(res,response,queryStringUrl,isSingle)
+{
+	var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
+	return res.on('data', function (chunk) {
+		try
+		{
+			var str=chunk.toString();
+			var match = re.exec(str);
+			if (match && match[2]) {
+
+				if(isSingle)writeTitleHeader(response);
+				writeTitle(response,match[2],queryStringUrl);
+				if(isSingle)writeTitleFooter(response);
+				if(isSingle)writeFooter(response);
+			}
+		}
+		catch(e)
+		{
+			console.log(e);
+		}
+	});
+}
 
 function writeHeader(response)
 {
@@ -135,11 +198,11 @@ function writeTitleFooter(response)
 	}
 }
 
-function writeTitle(response,title)
+function writeTitle(response,title,url)
 {
 	if(!response.finished)
 	{
-		response.write("<li>" + title + "</li>");
+		response.write("<li>" + url + " - "+title+"</li>");
 	}
 }
 
@@ -161,62 +224,4 @@ function writeAddressInUrl(response)
 		writeFooter(response);
 		response.end();
 	}	
-}
-
-function getQueryStringCount(url,queryStringCount)
-{
-	var splitUrl = url.split("&");
-
-	var lengthQueryString = 0;
-	if(splitUrl.length == 2 && queryStringCount > 5)
-	{
-		lengthQueryString = 1;
-	}
-	else
-	{
-		lengthQueryString = queryStringCount;
-	}
-
-	return lengthQueryString;
-}
-
-
-function getSingleWebsiteTitle(request,response)
-{
-	var queryStringUrl = request.query.address;
-	var validateQueryString = queryStringUrl.indexOf(".com") !== -1
-	if(validateQueryString)
-	{
-		var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
-		var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
-		http.get(urlOpts, function (res) {
-			res.on('data', function (chunk) {
-				try
-				{
-					var str=chunk.toString();
-					var match = re.exec(str);
-					if (match && match[2]) {
-
-						writeTitleHeader(response);
-						writeTitle(response,match[2]);
-						writeTitleFooter(response);
-						writeFooter(response);
-					}
-				}
-				catch(e)
-				{
-					console.log(e);
-				}
-			});
-		}).on("error", function(e){
-			console.log("Got error: " + e.message);
-			writeError(response);
-		});
-
-	}
-	else
-	{
-		//Invalid URL
-		writeError(response);
-	}
 }
