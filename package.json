@@ -1,0 +1,22 @@
+{
+  "name": "node-basics",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "test": "node ./node_modules/mocha/bin/mocha tests/routes --recursive"
+  },
+  "dependencies": {
+    "http": "^0.0.0",
+    "async": "^0.9.0",
+    "body-parser": "~1.0.0",
+    "debug": "~0.7.4",
+    "express": "~4.2.0",
+    "morgan": "~1.0.0",
+    "request": "^2.55.0",
+    "rsvp": "^3.0.18",
+    "rx": "^2.5.2",
+    "rxjs": "^5.0.0-rc.4",
+    "supertest": "0.13.0"
+  }
+}
