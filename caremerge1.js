@@ -33,7 +33,6 @@ app.get("/I/want/title/", function (request,response) {
 			for(var counter = 0;counter < queryStringCount;counter++)
 			{
 				var urlToShow = request.query.address[counter];
-				console.log(urlToShow);
 				var splitUrl = request.query.address[counter].split("/");
 
 				var validateQueryString = splitUrl[0].indexOf(".com") !== -1
