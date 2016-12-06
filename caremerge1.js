@@ -1,5 +1,6 @@
 var express = require('express');
 var http = require("http");
+var Utility = require("./Utility.js");
 
 var app = express();
 
@@ -8,17 +9,17 @@ app.get("/I/want/title/", function (request,response) {
 
 	var counterForWritingEnd = 0;
 	var requestUrl = request.url;
-	writeHeader(response);
+	Utility.writeHeader(response);
 
-	if(requestUrl.indexOf("address") == -1)
+	if(requestUrl.indexOf("address=") == -1)
 	{
-		writeAddressInUrl(response);
+		Utility.writeAddressInUrl(response);
 		return;
 	}
 
 	if(requestUrl.indexOf('&') > -1)
 	{
-		var queryStringCount = getQueryStringCount(requestUrl,Object.keys(request.query.address).length);
+		var queryStringCount = Utility.getQueryStringCount(requestUrl,Object.keys(request.query.address).length);
 		
 		if(queryStringCount == 1)
 		{
@@ -27,8 +28,8 @@ app.get("/I/want/title/", function (request,response) {
 		else
 		{
 			//get multi website title
-			writeHeader(response);
-			writeTitleHeader(response);
+			Utility.writeHeader(response);
+			Utility.writeTitleHeader(response);
 
 			for(var counter = 0;counter < queryStringCount;counter++)
 			{
@@ -43,7 +44,7 @@ app.get("/I/want/title/", function (request,response) {
 					var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
 
 
-					callbackClosure(urlToShow, function (x2){
+					Utility.callbackClosure(urlToShow, function (x2){
 						http.get(urlOpts, function (res) {
 
 						res.on('end',function(){
@@ -51,8 +52,8 @@ app.get("/I/want/title/", function (request,response) {
 
 							if(counterForWritingEnd == queryStringCount)
 							{
-								writeTitleFooter(response);
-								writeFooter(response);
+								Utility.writeTitleFooter(response);
+								Utility.writeFooter(response);
 							}
 						}),
 						//async call
@@ -60,14 +61,14 @@ app.get("/I/want/title/", function (request,response) {
 
 						}).on('error',function(e){
 							console.log("Got error: " + e.message);
-							writeError(response);
+							Utility.writeError(response);
 						});
 					});
 					
 				}
 				else
 				{
-					writeError(response);
+					Utility.writeError(response);
 					break;
 				}
 			}
@@ -82,34 +83,11 @@ app.get("/I/want/title/", function (request,response) {
 
 });
 
-function callbackClosure(i, callback) 
-{
-	return callback(i);
-}
-
 app.get("*", function (request,response) {
 	response.status(404).send('Not found');
 });
 
 app.listen(8080);
-
-
-function getQueryStringCount(url,queryStringCount)
-{
-	var splitUrl = url.split("&");
-
-	var lengthQueryString = 0;
-	if(splitUrl.length == 2 && queryStringCount > 5)
-	{
-		lengthQueryString = 1;
-	}
-	else
-	{
-		lengthQueryString = queryStringCount;
-	}
-
-	return lengthQueryString;
-}
 
 
 function getSingleWebsiteTitle(request,response)
@@ -125,14 +103,14 @@ function getSingleWebsiteTitle(request,response)
 
 		}).on("error", function(e){
 			console.log("Got error: " + e.message);
-			writeError(response);
+			Utility.writeError(response);
 		});
 
 	}
 	else
 	{
 		//Invalid URL
-		writeError(response);
+		Utility.writeError(response);
 	}
 }
 
@@ -146,10 +124,10 @@ function getTitleResponse(res,response,queryStringUrl,isSingle)
 			var match = re.exec(str);
 			if (match && match[2]) {
 
-				if(isSingle)writeTitleHeader(response);
-				writeTitle(response,match[2],queryStringUrl);
-				if(isSingle)writeTitleFooter(response);
-				if(isSingle)writeFooter(response);
+				if(isSingle)Utility.writeTitleHeader(response);
+				Utility.writeTitle(response,match[2] + " - " + queryStringUrl);
+				if(isSingle)Utility.writeTitleFooter(response);
+				if(isSingle)Utility.writeFooter(response);
 			}
 		}
 		catch(e)
@@ -159,68 +137,3 @@ function getTitleResponse(res,response,queryStringUrl,isSingle)
 	});
 }
 
-function writeHeader(response)
-{
-	if(!response.finished)
-	{
-		response.write("<html>");
-		response.write("<head><title>Caremerge");
-		response.write("</title></head>");
-		response.write("<body>");
-	}
-}
-
-function writeFooter(response)
-{
-	if(!response.finished)
-	{
-		response.write("</body>");
-		response.write("</html>");	
-		response.end();
-	}
-}
-
-function writeTitleHeader(response)
-{
-	if(!response.finished)
-	{
-		response.write("<h1> Following are the titles of given websites: </h1>");
-		response.write("<ul>")
-	}
-}
-
-function writeTitleFooter(response)
-{
-	if(!response.finished)
-	{
-		response.write("</ul>")
-	}
-}
-
-function writeTitle(response,title,url)
-{
-	if(!response.finished)
-	{
-		response.write("<li>" + url + " - "+title+"</li>");
-	}
-}
-
-function writeError(response)
-{	
-	if(!response.finished)
-	{
-		response.write("<h1>Invalid URL</h1>")
-		writeFooter(response);
-		response.end();
-	}
-}
-
-function writeAddressInUrl(response)
-{
-	if(!response.finished)
-	{
-		response.write("<h1>Please write address in URL so as to get titles</h1>")
-		writeFooter(response);
-		response.end();
-	}	
-}

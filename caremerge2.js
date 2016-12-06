@@ -1,6 +1,8 @@
 var express = require('express');
 var http = require("http");
 var async = require("async");
+var Utility = require("./Utility.js");
+
 var app = express();
 var stack =[];
 
@@ -8,17 +10,17 @@ app.get("/I/want/title/", function (request,response) {
 
 	stack = [];
 	var requestUrl = request.url;
-	writeHeader(response);
+	Utility.writeHeader(response);
 
-	if(requestUrl.indexOf("address") == -1)
+	if(requestUrl.indexOf("address=") == -1)
 	{
-		writeAddressInUrl(response);
+		Utility.writeAddressInUrl(response);
 		return;
 	}
 
 	if(requestUrl.indexOf('&') > -1)
 	{
-		queryStringCount  = getQueryStringCount(requestUrl,Object.keys(request.query.address).length);
+		queryStringCount  = Utility.getQueryStringCount(requestUrl,Object.keys(request.query.address).length);
 		
 		if(queryStringCount == 1)
 		{
@@ -30,7 +32,7 @@ app.get("/I/want/title/", function (request,response) {
 			}
 			else
 			{
-				writeError(response);
+				Utility.writeError(response);
 			}
 		}
 		else
@@ -47,7 +49,7 @@ app.get("/I/want/title/", function (request,response) {
 					var urlOpts = {host: splitUrl[0], path: splitUrl[1] == undefined ? "/": "/"+splitUrl[1] + "/", port: '80'};
 					var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
 
-					var requestForTitle = callbackClosure(urlToShow, function(x2){
+					var requestForTitle = Utility.callbackClosure(urlToShow, function(x2){
 						return GetTitleOfWeb(urlOpts,re,x2);	
 					});
 
@@ -55,7 +57,7 @@ app.get("/I/want/title/", function (request,response) {
 				}
 				else
 				{
-					writeError(response);
+					Utility.writeError(response);
 					break;
 				}
 			}
@@ -73,7 +75,7 @@ app.get("/I/want/title/", function (request,response) {
 		}
 		else
 		{
-			writeError(response);
+			Utility.writeError(response);
 		}
 	}
 
@@ -85,47 +87,25 @@ app.get("/I/want/title/", function (request,response) {
 			console.log("error"+err);
 		}
 
-		writeTitleHeader(response);
+		Utility.writeTitleHeader(response);
 		
 		for(var i = 0;i<result.length;i++)
 		{
-			writeTitle(response,result[i]);
+			Utility.writeTitle(response,result[i]);
 		}
 
-		writeTitleFooter(response);
-		writeFooter(response);
+		Utility.writeTitleFooter(response);
+		Utility.writeFooter(response);
 
 	});
 	
 });
-
-function callbackClosure(i, callback) 
-{
-	return callback(i);
-}
 
 app.get("*", function (request,response) {
 	response.status(404).send('Not found');
 });
 
 app.listen(8080);
-
-function getQueryStringCount(url,queryStringCount)
-{
-	var splitUrl = url.split("&");
-
-	var lengthQueryString = 0;
-	if(splitUrl.length == 2 && queryStringCount > 5)
-	{
-		lengthQueryString = 1;
-	}
-	else
-	{
-		lengthQueryString = queryStringCount;
-	}
-
-	return lengthQueryString;
-}
 
 function GetTitleOfWeb(urlOpts,re,queryStringUrl)
 {
@@ -140,7 +120,7 @@ function GetTitleOfWeb(urlOpts,re,queryStringUrl)
 				var match = re.exec(str);
 				if (match && match[2]) {
 
-					callback(null,match[2] + "--" + queryStringUrl);
+					callback(null,match[2] + " - " + queryStringUrl);
 				}
 
 			});
@@ -160,70 +140,4 @@ function getSingleWebsiteTitle(request,response,queryStringUrl)
 	var requestForTitle = GetTitleOfWeb(urlOpts,re,queryStringUrl);
 
 	stack.push(requestForTitle);
-}
-
-function writeHeader(response)
-{
-	if(!response.finished)
-	{
-		response.write("<html>");
-		response.write("<head><title>Caremerge");
-		response.write("</title></head>");
-		response.write("<body>");
-	}
-}
-
-function writeFooter(response)
-{
-	if(!response.finished)
-	{
-		response.write("</body>");
-		response.write("</html>");	
-		response.end();
-	}
-}
-
-function writeTitleHeader(response)
-{
-	if(!response.finished)
-	{
-		response.write("<h1> Following are the titles of given websites: </h1>");
-		response.write("<ul>")
-	}
-}
-
-function writeTitleFooter(response)
-{
-	if(!response.finished)
-	{
-		response.write("</ul>")
-	}
-}
-
-function writeTitle(response,title)
-{
-	if(!response.finished)
-	{
-		response.write("<li>" + title + "</li>");
-	}
-}
-
-function writeAddressInUrl(response)
-{
-	if(!response.finished)
-	{
-		response.write("<h1>Please write address in URL so as to get titles</h1>")
-		writeFooter(response);
-		response.end();
-	}	
-}
-
-function writeError(response)
-{	
-	if(!response.finished)
-	{
-		response.write("<h1>Invalid URL</h1>")
-		writeFooter(response);
-		response.end();
-	}
 }
