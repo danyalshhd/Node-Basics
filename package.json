@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "node ./node_modules/mocha/bin/mocha tests/routes --recursive"
+    "test": "node ./node_modules/mocha/bin/mocha tests/routes --recursive",
+    "test-1":"node caremerge1.js",
+    "test-2":"node caremerge2.js",
+    "test-3":"node caremerge3.js",
+    "test-bonus":"node bonus.js",
   },
   "dependencies": {
     "http": "^0.0.0",
