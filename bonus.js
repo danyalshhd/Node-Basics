@@ -13,7 +13,7 @@ app.get("/I/want/title/", function (request,response) {
 	var requestUrl = request.url;
 	Utility.writeHeader(response);
 
-	if(requestUrl.indexOf("address") == -1)
+	if(requestUrl.indexOf("address=") == -1)
 	{
 		Utility.writeAddressInUrl(response);
 		return;
@@ -27,27 +27,7 @@ app.get("/I/want/title/", function (request,response) {
 
 		if(queryStringCount == 1)
 		{
-				//For querystring which contains no '&'
-			var queryStringUrl = request.query.address;
-			var validateQueryString = queryStringUrl.indexOf(".com") !== -1
-			if(validateQueryString)
-			{
-				var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
-				
-				var getTitlePromise = getTitle(urlOpts,queryStringUrl)
-				const source$ = Rx.Observable.fromPromise(getTitlePromise);
-				source$.subscribe(titleName=>{
-					Utility.writeTitleHeader(response);
-					Utility.writeTitle(response,titleName);
-					Utility.writeTitleFooter(response);
-					Utility.writeFooter(response);
-				});
-
-			}
-			else
-			{
-				Utility.writeError(response);
-			}
+			getSingleAddressTitle(request,response);
 		}
 		else
 		{
@@ -90,27 +70,7 @@ app.get("/I/want/title/", function (request,response) {
 	}
 	else
 	{
-		//For querystring which contains no '&'
-		var queryStringUrl = request.query.address;
-		var validateQueryString = queryStringUrl.indexOf(".com") !== -1
-		if(validateQueryString)
-		{
-			var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
-			
-			var getTitlePromise = getTitle(urlOpts,queryStringUrl)
-			const source$ = Rx.Observable.fromPromise(getTitlePromise);
-			source$.subscribe(titleName=>{
-				Utility.writeTitleHeader(response);
-				Utility.writeTitle(response,titleName);
-				Utility.writeTitleFooter(response);
-				Utility.writeFooter(response);
-			});
-
-		}
-		else
-		{
-			Utility.writeError(response);
-		}
+		getSingleAddressTitle(request,response);
 	}
 });
 
@@ -122,7 +82,7 @@ app.get("*", function (request,response) {
 app.listen(8080);
 
 //return promise object
-var getTitle = function(urlOpts,urlToShow)
+var getTitle = function(urlOpts,urlToShow,response)
 {
 	var promise = new RSVP.Promise(function(resolve,reject)
 	{
@@ -144,4 +104,29 @@ var getTitle = function(urlOpts,urlToShow)
 	});
 
 	return promise;
+}
+
+var getSingleAddressTitle = function(request,response)
+{
+	//For querystring which contains no '&'
+	var queryStringUrl = request.query.address;
+	var validateQueryString = queryStringUrl.indexOf(".com") !== -1
+	if(validateQueryString)
+	{
+		var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
+		
+		var getTitlePromise = getTitle(urlOpts,queryStringUrl,response)
+		const source$ = Rx.Observable.fromPromise(getTitlePromise);
+		source$.subscribe(titleName=>{
+			Utility.writeTitleHeader(response);
+			Utility.writeTitle(response,titleName);
+			Utility.writeTitleFooter(response);
+			Utility.writeFooter(response);
+		});
+
+	}
+	else
+	{
+		Utility.writeError(response);
+	}
 }

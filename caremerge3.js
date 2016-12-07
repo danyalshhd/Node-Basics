@@ -4,40 +4,14 @@ var RSVP = require('rsvp');
 var Utility = require("./Utility.js");
 var counterForWritingEnd = 0;
 
-
 var app = express();
-
-//return promise object
-var getTitle = function(urlOpts)
-{
-	var promise = new RSVP.Promise(function(resolve,reject)
-	{
-		var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
-
-		http.get(urlOpts, function (res) {
-			res.on('data', function (chunk) {
-	    	//callback
-	    	var str=chunk.toString();
-	    	var match = re.exec(str);
-	    	if (match && match[2]) {
-	        	//get the title
-	        	resolve(match[2]);
-	        }
-	    });
-		}).on("error", function(e){
-			reject(e.message);
-		});
-	});
-
-	return promise;
-}
 
 app.get("/I/want/title/", function (request,response) {
 
 	var requestUrl = request.url;
 	Utility.writeHeader(response);
 
-	if(requestUrl.indexOf("address") == -1)
+	if(requestUrl.indexOf("address=") == -1)
 	{
 		Utility.writeAddressInUrl(response);
 		return;
@@ -51,28 +25,7 @@ app.get("/I/want/title/", function (request,response) {
 		
 		if(queryStringCount == 1)
 		{
-			var queryStringUrl = request.query.address;
-			var validateQueryString = queryStringUrl.indexOf(".com") !== -1
-			if(validateQueryString)
-			{
-				var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
-
-				getTitle(urlOpts).then(function(responseText)
-				{
-					Utility.writeTitleHeader(response);
-					Utility.writeTitle(response,responseText + " - " + queryStringUrl);
-					Utility.writeTitleFooter(response);
-					Utility.writeFooter(response);
-
-				}).catch(function(error)
-				{
-					console.log(error);
-				});
-			}
-			else
-			{
-				Utility.writeError(response);
-			}
+			getSingleAddressTitle(request,response);
 		}	
 		else
 		{
@@ -117,28 +70,7 @@ app.get("/I/want/title/", function (request,response) {
 	else
 	{
 		//For querystring which contains no '&'
-		var queryStringUrl = request.query.address;
-		var validateQueryString = queryStringUrl.indexOf(".com") !== -1
-		if(validateQueryString)
-		{
-			var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
-
-			getTitle(urlOpts).then(function(responseText)
-			{
-				Utility.writeTitleHeader(response);
-				Utility.writeTitle(response,responseText + " - " + queryStringUrl);
-				Utility.writeTitleFooter(response);
-				Utility.writeFooter(response);
-
-			}).catch(function(error)
-			{
-				console.log(error);
-			});
-		}
-		else
-		{
-			Utility.writeError(response);
-		}
+		getSingleAddressTitle(request,response);
 	}
 });
 
@@ -148,3 +80,54 @@ app.get("*", function (request,response) {
 });
 
 app.listen(8080);
+
+//return promise object
+var getTitle = function(urlOpts)
+{
+	var promise = new RSVP.Promise(function(resolve,reject)
+	{
+		var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
+
+		http.get(urlOpts, function (res) {
+			res.on('data', function (chunk) {
+	    	//callback
+	    	var str=chunk.toString();
+	    	var match = re.exec(str);
+	    	if (match && match[2]) {
+	        	//get the title
+	        	resolve(match[2]);
+	        }
+	    });
+		}).on("error", function(e){
+			reject(e.message);
+		});
+	});
+
+	return promise;
+}
+
+var getSingleAddressTitle = function(request,response)
+{
+	var queryStringUrl = request.query.address;
+	var validateQueryString = queryStringUrl.indexOf(".com") !== -1
+	if(validateQueryString)
+	{
+		var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
+
+		getTitle(urlOpts).then(function(responseText)
+		{
+			Utility.writeTitleHeader(response);
+			Utility.writeTitle(response,responseText + " - " + queryStringUrl);
+			Utility.writeTitleFooter(response);
+			Utility.writeFooter(response);
+
+		}).catch(function(error)
+		{
+			console.log(error);
+		});
+	}
+	else
+	{
+		Utility.writeError(response);
+	}	
+}
