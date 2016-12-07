@@ -2,9 +2,7 @@ var express = require('express');
 var http = require("http");
 var Utility = require("./Utility.js");
 
-
 var app = express();
-
 
 app.get("/I/want/title/", function (request,response) {
 
@@ -58,7 +56,7 @@ app.get("/I/want/title/", function (request,response) {
 							}
 						}),
 						//async call
-						getTitleResponse(res,response,x2,false);
+						showTitleResponse(res,response,x2,false);
 
 						}).on('error',function(e){
 							console.log("Got error: " + e.message);
@@ -100,7 +98,7 @@ function getSingleWebsiteTitle(request,response)
 		var urlOpts = {host: queryStringUrl, path: "/", port: '80'};
 		http.get(urlOpts, function (res) {
 
-			getTitleResponse(res,response,queryStringUrl,true);
+			showTitleResponse(res,response,queryStringUrl,true);
 
 		}).on("error", function(e){
 			console.log("Got error: " + e.message);
@@ -115,7 +113,7 @@ function getSingleWebsiteTitle(request,response)
 	}
 }
 
-function getTitleResponse(res,response,queryStringUrl,isSingle)
+function showTitleResponse(res,response,queryStringUrl,isSingle)
 {
 	var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
 	return res.on('data', function (chunk) {
@@ -126,7 +124,7 @@ function getTitleResponse(res,response,queryStringUrl,isSingle)
 			if (match && match[2]) {
 
 				if(isSingle)Utility.writeTitleHeader(response);
-				Utility.writeTitle(response,match[2] + " - " + queryStringUrl);
+				Utility.writeTitle(response,((res.statusCode == 200) ? match[2] : "Not found") + " - " + queryStringUrl);
 				if(isSingle)Utility.writeTitleFooter(response);
 				if(isSingle)Utility.writeFooter(response);
 			}

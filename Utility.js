@@ -86,6 +86,4 @@ module.exports = {
 	{
 		return callback(i);
 	}
-	
-
 }

@@ -121,7 +121,7 @@ function GetTitleOfWeb(urlOpts,re,queryStringUrl)
 				var match = re.exec(str);
 				if (match && match[2]) {
 
-					callback(null,match[2] + " - " + queryStringUrl);
+					callback(null,((res.statusCode == 200) ? match[2] : "Not found") + " - " + queryStringUrl);
 				}
 
 			});

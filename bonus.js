@@ -95,7 +95,7 @@ var getTitle = function(urlOpts,urlToShow,response)
 	    	var match = re.exec(str);
 	    	if (match && match[2]) {
 	        	//get the title
-	        	resolve(match[2] + " - " + urlToShow);
+	        	resolve(((res.statusCode == 200) ? match[2] : "Not found") + " - " + urlToShow);
 	        }
 	    });
 		}).on("error", function(e){
