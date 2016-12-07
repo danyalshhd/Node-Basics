@@ -43,7 +43,7 @@ app.get("/I/want/title/", function (request,response) {
 				{
 					var urlOpts = {host: splitUrl[0], path: splitUrl[1] == undefined ? "/": "/"+splitUrl[1] + "/", port: '80'};
 
-					var getTitlePromise = Utility.callbackClosure(urlToShow,function(x2){
+					var getTitlePromise = Utility.getUrlWithTitle(urlToShow,function(x2){
 						return getTitle(urlOpts,x2);
 					}); 
 

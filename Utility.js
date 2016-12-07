@@ -82,7 +82,7 @@ module.exports = {
 		return lengthQueryString;
 	},
 
-	callbackClosure : function(i, callback) 
+	getUrlWithTitle : function(i, callback) 
 	{
 		return callback(i);
 	}

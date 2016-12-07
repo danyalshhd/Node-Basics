@@ -43,7 +43,7 @@ app.get("/I/want/title/", function (request,response) {
 					var re = /(<\s*title[^>]*>(.+?)<\s*\/\s*title)>/gi;
 
 
-					Utility.callbackClosure(urlToShow, function (x2){
+					Utility.getUrlWithTitle(urlToShow, function (x2){
 						http.get(urlOpts, function (res) {
 
 						res.on('end',function(){
