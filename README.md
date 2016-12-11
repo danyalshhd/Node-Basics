@@ -10,6 +10,13 @@ To start the server:
 
     npm start
 
+##Example
+Run following example commands for each of the questions:
+http://localhost:8080/**test-1**/I/want/title/?address=www.google.com.pk
+http://localhost:8080/test-2/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events
+http://localhost:8080/test-3/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events
+http://localhost:8080/bonus/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events
+
 ## Directory Structure
 The code structure is as follows:
 
@@ -24,5 +31,8 @@ The code structure is as follows:
         index.js    -- links controller to routes
     /views
     	View.js     --helper methods for controllers to show view
+    .gitignore      --added nodemodules in it
     package.json
     README.md
+
+
