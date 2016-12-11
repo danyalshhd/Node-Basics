@@ -11,11 +11,11 @@ To start the server:
     npm start
 
 ##Example
-Run following example commands for each of the questions:
-http://localhost:8080/**test-1**/I/want/title/?address=www.google.com.pk
-http://localhost:8080/test-2/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events
-http://localhost:8080/test-3/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events
-http://localhost:8080/bonus/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events
+Run following example commands for each of the questions:<br>
+'http://localhost:8080/**test-1**/I/want/title/?address=www.google.com.pk'<br>
+'http://localhost:8080/test-2/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events'<br>
+'http://localhost:8080/test-3/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events'<br>
+'http://localhost:8080/bonus/I/want/title/?address=www.google.com.pk&address=www.dawn.com/events'<br>
 
 ## Directory Structure
 The code structure is as follows:
